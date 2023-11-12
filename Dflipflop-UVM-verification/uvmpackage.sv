@@ -34,7 +34,8 @@ endclass : sequence_item
 
 //---------------------------Sequence1 class------------------------------
 
-class sequence1 extends uvm_sequence #(sequence_item);
+//This sequence is for reset = 0
+/**class sequence1 extends uvm_sequence #(sequence_item);
 
 `uvm_object_utils(sequence1)
 
@@ -51,11 +52,11 @@ repeat(5) begin
 start_item(req);
 assert(req.randomize());
 if(!req.randomize()) begin
-`uvm_error("SEQUENCE1 CLASS","RANDOMIZATION HAS FAILED SOMETHING IS WRONG !!!!")
+`uvm_error("SEQUENCE1 CLASS","RANDOMIZATION OF DATA HAS FAILED!!!!")
 end
 
 else begin
-//req.reset = 0;
+req.reset = 1;
 `uvm_info("SEQUENCE1 CLASS","DATA HAS BEEN RANDOMIZED AND SEND TO DRIVER",UVM_NONE);
 req.print();
 end
@@ -67,7 +68,85 @@ end
 
 endtask
 
-endclass : sequence1
+endclass : sequence1**/
+
+
+
+//---------------------------Sequence2 class------------------------------
+
+//This sequence is for reset = 1
+class sequence2 extends uvm_sequence #(sequence_item);
+
+`uvm_object_utils(sequence2)
+
+function new(string name = "sequence2");
+super.new(name);
+endfunction
+
+task body;
+
+req = sequence_item::type_id::create("req");//creating an instance of transaction or sequence item using factory method
+
+repeat(5) begin
+
+start_item(req);
+assert(req.randomize());
+if(!req.randomize()) begin
+`uvm_error("SEQUENCE2 CLASS","RANDOMIZATION OF DATA HAS FAILED!!!!")
+end
+
+else begin
+req.reset = 0;
+`uvm_info("SEQUENCE2 CLASS","DATA HAS BEEN RANDOMIZED AND SEND TO DRIVER",UVM_NONE);
+req.print();
+end
+
+
+finish_item(req);
+
+end
+
+endtask
+
+endclass : sequence2
+
+
+//---------------------------Sequence3 class------------------------------
+
+//This sequence is for random values of d and reset
+/**class sequence3 extends uvm_sequence #(sequence_item);
+
+`uvm_object_utils(sequence3)
+
+function new(string name = "sequence3");
+super.new(name);
+endfunction
+
+task body;
+
+req = sequence_item::type_id::create("req");//creating an instance of transaction or sequence item using factory method
+
+repeat(5) begin
+
+start_item(req);
+assert(req.randomize());
+if(!req.randomize()) begin
+`uvm_error("SEQUENCE3 CLASS","RANDOMIZATION OF DATA HAS FAILED!!!!")
+end
+
+else begin
+`uvm_info("SEQUENCE3 CLASS","DATA HAS BEEN RANDOMIZED AND SEND TO DRIVER",UVM_NONE);
+req.print();
+end
+
+
+finish_item(req);
+
+end
+
+endtask
+
+endclass : sequence3**/
 
 
 //---------------------------Sequencer class------------------------------
@@ -194,6 +273,7 @@ endtask
 endclass : monitor
 
 
+
 //---------------------------Agent class----------------------------------
 
 class agent extends uvm_agent;
@@ -204,6 +284,7 @@ class agent extends uvm_agent;
 driver driver_h;
 monitor monitor_h;
 sequencer sequencer_h;
+
 
 virtual dut_if vif;
 
@@ -217,12 +298,17 @@ function void build_phase(uvm_phase phase);
 super.build_phase(phase);
 
 monitor_h = monitor::type_id::create("monitor_h",this);
+
+if(!uvm_config_db #(virtual dut_if)::get(this,"","virtual_interface",vif)) begin
+`uvm_fatal("AGENT CLASS","UNABLE TO GET VIRTUAL INTERFACE")
+end
+
+
 driver_h = driver::type_id::create("driver_h",this);
 sequencer_h = sequencer::type_id::create("sequencer_h",this);
 
 
-if(!uvm_config_db #(virtual dut_if)::get(this,"","virtual_interface",vif))
-	`uvm_fatal("AGENT CLASS","UNABLE TO GET VIRTUAL INTERFACE")
+
 
 endfunction
 
@@ -231,7 +317,9 @@ endfunction
 function void connect_phase(uvm_phase phase);
 super.connect_phase(phase);
 
+//if(a_config.is_active == UVM_ACTIVE) begin
 driver_h.seq_item_port.connect(sequencer_h.seq_item_export);
+//end
 
 endfunction
 
@@ -413,8 +501,9 @@ class test1 extends base_test;
 
 `uvm_component_utils(test1)
 
-sequence1 seq;
-
+//sequence1 seq1;
+sequence2 seq2;
+//sequence3 seq3;
 
 function new(string name = "test1" , uvm_component parent);
 super.new(name,parent);
@@ -429,11 +518,18 @@ endfunction
 
 
 task run_phase(uvm_phase phase);
-seq = sequence1::type_id::create("seq",this);
+
+//seq1 = sequence1::type_id::create("seq1");
+seq2 = sequence2::type_id::create("seq2");
+//seq3 = sequence3::type_id::create("seq3");
 
 phase.raise_objection(this);
 
-seq.start(env_h.agent_h.sequencer_h);
+//seq1.start(env_h.agent_h.sequencer_h);
+//#60;
+seq2.start(env_h.agent_h.sequencer_h);
+//#60;
+//seq3.start(env_h.agent_h.sequencer_h);
 
 phase.drop_objection(this);
 
@@ -442,6 +538,9 @@ endtask
 
 
 endclass
+
+
+
 
 
 endpackage
