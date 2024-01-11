@@ -54,6 +54,8 @@ function new(string name = "sequence1");
 super.new(name);
 endfunction
 
+
+
 task body;
 
 req = sequence_item::type_id::create("req");
@@ -62,9 +64,18 @@ repeat(10) begin
 
 start_item(req);
 req.randomize();
-`uvm_info("SEQUENCE1 CLASS","DATA HAS BEEN SEND TO DRIVER",UVM_NONE)
-//req.print();
+
+if(!(req.randomize())) begin
+	`uvm_info("SEQUENCE1 CLASS","Randomization of data has failed!",UVM_NONE)
+end
+
+else begin
+`uvm_info("SEQUENCE1 CLASS","Randomization of data is successfull",UVM_NONE)
+`uvm_info("SEQUENCE1 CLASS","Data has been send to driver",UVM_NONE)
 finish_item(req);
+end
+
+
 
 end
 
@@ -106,7 +117,7 @@ super.build_phase(phase);
 req = sequence_item::type_id::create("req");
 
 if(!uvm_config_db #(virtual alu_if)::get(this,"","virtual_interface",vif))
-	`uvm_fatal("DRIVER CLASS","UNABLE TO GET VIRTUAL INTERFACE")
+	`uvm_fatal("DRIVER CLASS","Unable to get virtual interface")
 
 endfunction
 
@@ -126,8 +137,7 @@ vif.ALUResult <= req.ALUResult;
 vif.zero <= req.zero;
 
 
-`uvm_info("DRIVER CLASS","DATA HAS BEEN RECIEVED BY DRIVER",UVM_NONE)
-//req.print();
+`uvm_info("DRIVER CLASS","Data has been recieved by driver",UVM_NONE)
 #10;
 
 seq_item_port.item_done();
@@ -169,7 +179,7 @@ super.build_phase(phase);
 tx = sequence_item::type_id::create("tx");
 
 if(!uvm_config_db #(virtual alu_if)::get(this,"","virtual_interface",vif))
-	`uvm_fatal("MONITOR CLASS","UNABLE TO GET VIRTUAL INTERFACE")
+	`uvm_fatal("MONITOR CLASS","Unable to get virtual interface")
 
 endfunction
 
@@ -185,8 +195,7 @@ tx.ALUControl <= vif.ALUControl;
 tx.ALUResult <= vif.ALUResult;
 tx.zero <= vif.zero;
 
-`uvm_info("MONITOR CLASS","DATA HAS BEEN SEND TO SCOREBOARD",UVM_MEDIUM);
-//tx.print();
+`uvm_info("MONITOR CLASS","Data has been send to scoreboard",UVM_NONE)
 
 analysis_port.write(tx);
 
@@ -211,7 +220,6 @@ class agent extends uvm_agent;
 
 `uvm_component_utils(agent)
 
-//agent_config a_config;
 driver driver_h;
 monitor monitor_h;
 sequencer sequencer_h;
@@ -228,19 +236,13 @@ function void build_phase(uvm_phase phase);
 super.build_phase(phase);
 
 monitor_h = monitor::type_id::create("monitor_h",this);
-//a_config = agent_config::type_id::create("a_config");
 driver_h = driver::type_id::create("driver_h",this);
 sequencer_h = sequencer::type_id::create("sequencer_h",this);
 
 if(!uvm_config_db #(virtual alu_if)::get(this,"","virtual_interface",vif)) begin
-	`uvm_fatal("AGENT CLASS","UNABLE TO GET VIRTUAL INTERFACE")
+	`uvm_fatal("AGENT CLASS","Unable to get virtual interface")
 end
 
-//if(a_config.is_active == UVM_ACTIVE) begin
-
-
-
-//end
 
 
 endfunction
@@ -250,10 +252,8 @@ endfunction
 function void connect_phase(uvm_phase phase);
 super.connect_phase(phase);
 
-//if(a_config.is_active == UVM_ACTIVE) begin
-driver_h.seq_item_port.connect(sequencer_h.seq_item_export);
-//end
 
+driver_h.seq_item_port.connect(sequencer_h.seq_item_export);
 
 endfunction
 
@@ -261,6 +261,74 @@ endclass
 
 
 //------------ Scoreboard class ----------------
+
+
+function void check1(input sequence_item trans);
+if(trans.ALUControl == 3'b000) begin
+	if(trans.ALUResult == (trans.in1 + trans.in2)) begin
+		`uvm_info("SCOREBOARD CLASS","Test passed for addition",UVM_NONE);
+	end
+end
+endfunction
+
+
+function void check2(input sequence_item trans);
+if(trans.ALUControl == 3'b001) begin
+	if(trans.ALUResult == (trans.in1 - trans.in2)) begin
+		`uvm_info("SCOREBOARD CLASS","Test passed for subtraction",UVM_NONE);
+	end
+end
+endfunction
+
+
+function void check3(input sequence_item trans);
+if(trans.ALUControl == 3'b010) begin
+	if(trans.ALUResult == (trans.in1 & trans.in2)) begin
+		`uvm_info("SCOREBOARD CLASS","Test passed for & operation",UVM_NONE);
+	end
+end
+endfunction
+
+
+function void check4(input sequence_item trans);
+if(trans.ALUControl == 3'b011) begin
+	if(trans.ALUResult == (trans.in1 | trans.in2)) begin
+		`uvm_info("SCOREBOARD CLASS","Test passed for | operation",UVM_NONE);
+	end
+end
+endfunction
+
+
+function void check5(input sequence_item trans);
+if(trans.ALUControl == 3'b100) begin
+	if(trans.ALUResult == (trans.in1 ^ trans.in2)) begin
+		`uvm_info("SCOREBOARD CLASS","Test passed for ^ operation",UVM_NONE);
+	end
+end
+
+endfunction
+
+
+function void check6(input sequence_item trans);
+if(trans.ALUControl == 3'b101) begin
+	if(trans.ALUResult == (trans.in1 * trans.in2)) begin
+		`uvm_info("SCOREBOARD CLASS","Test passed for multiplication operation",UVM_NONE);
+	end
+end
+
+endfunction
+
+
+function void check7(input sequence_item trans);
+if(trans.ALUControl == 3'b110) begin
+	if(trans.ALUResult == (trans.in1 / trans.in2)) begin
+		`uvm_info("SCOREBOARD CLASS","Test passed for division operation",UVM_NONE);
+	end
+end
+endfunction
+
+
+
 
 class scoreboard extends uvm_scoreboard;
 
@@ -289,66 +357,23 @@ endfunction
 
 function void write(input sequence_item trans);
 
-`uvm_info("SCOREBOARD CLASS","DATA HAS BEEN RECIEVED BY SCOREBOARD",UVM_MEDIUM)
-trans.print();
+`uvm_info("SCOREBOARD CLASS","Data has been recieved by scoreboard",UVM_NONE)
 
-if(trans.ALUControl == 3'b000) begin
-	if(trans.ALUResult == (trans.in1 + trans.in2)) begin
-		`uvm_info("SCOREBOARD CLASS","TEST PASSED FOR ADDITION",UVM_NONE);
-	end
-end
+`uvm_info("SCOREBOARD CLASS",$sformatf("in1 =  0x%0h",trans.in1),UVM_NONE) 
+`uvm_info("SCOREBOARD CLASS",$sformatf("in2 =  0x%0h",trans.in2),UVM_NONE) 
+`uvm_info("SCOREBOARD CLASS",$sformatf("ALUControl =  0x%0h",trans.ALUControl),UVM_NONE) 
+`uvm_info("SCOREBOARD CLASS",$sformatf("ALUResult =  0x%0h",trans.ALUResult),UVM_NONE) 
+`uvm_info("SCOREBOARD CLASS",$sformatf("zero =  0x%0h",trans.zero),UVM_NONE) 
 
-
-else if(trans.ALUControl == 3'b001) begin
-	if(trans.ALUResult == (trans.in1 - trans.in2)) begin
-		`uvm_info("SCOREBOARD CLASS","TEST PASSED FOR SUBTRACTION",UVM_NONE);
-	end
-end
-
-
-else if(trans.ALUControl == 3'b010) begin
-	if(trans.ALUResult == (trans.in1 & trans.in2)) begin
-		`uvm_info("SCOREBOARD CLASS","TEST PASSED FOR AND OPERATION",UVM_NONE);
-	end
-end
-
-
-
-else if(trans.ALUControl == 3'b011) begin
-	if(trans.ALUResult == (trans.in1 | trans.in2)) begin
-		`uvm_info("SCOREBOARD CLASS","TEST PASSED FOR OR OPERATION",UVM_NONE);
-	end
-end
-
-
-else if(trans.ALUControl == 3'b100) begin
-	if(trans.ALUResult == (trans.in1 ^ trans.in2)) begin
-		`uvm_info("SCOREBOARD CLASS","TEST PASSED FOR XOR OPERATION",UVM_NONE);
-	end
-end
-
-
-else if(trans.ALUControl == 3'b101) begin
-	if(trans.ALUResult == (trans.in1 * trans.in2)) begin
-		`uvm_info("SCOREBOARD CLASS","TEST PASSED FOR MUL OPERATION",UVM_NONE);
-	end
-end
-
-
-else if(trans.ALUControl == 3'b110) begin
-	if(trans.ALUResult == (trans.in1 / trans.in2)) begin
-		`uvm_info("SCOREBOARD CLASS","TEST PASSED FOR DIV OPERATION",UVM_NONE);
-	end
-end
-
-else 
-	`uvm_error("SCOREBOARD CLASS","TEST FAILED")
-     
+check1(trans);
+check2(trans);
+check3(trans);
+check4(trans);
+check5(trans);
+check6(trans);
+check7(trans);
 	
-
-
 endfunction
-
 
 endclass
 
@@ -433,7 +458,7 @@ server = uvm_report_server::get_server();
 if(server.get_severity_count(UVM_FATAL) == 0 & server.get_severity_count(UVM_ERROR) == 0) begin
 
 `uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
-`uvm_info("REPORT PHASE","-----------TEST PASSED----------",UVM_NONE);
+`uvm_info("REPORT PHASE","-----------TEST1 PASSED----------",UVM_NONE);
 `uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
 
 if(server.get_severity_count(UVM_WARNING) != 0) begin
@@ -462,7 +487,7 @@ end
 else begin
 
 `uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
-`uvm_info("REPORT PHASE","-----------TEST FAILED----------",UVM_NONE);
+`uvm_info("REPORT PHASE","-----------TEST1 FAILED----------",UVM_NONE);
 `uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
 
 end
