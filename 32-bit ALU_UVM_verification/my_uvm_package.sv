@@ -44,7 +44,7 @@ endfunction
 endclass
 
 
-//------------ Sequence class ----------------
+//------------ Sequence1 class ----------------
 
 class sequence1 extends uvm_sequence #(sequence_item);
 
@@ -267,6 +267,9 @@ function void check1(input sequence_item trans);
 if(trans.ALUControl == 3'b000) begin
 	if(trans.ALUResult == (trans.in1 + trans.in2)) begin
 		`uvm_info("SCOREBOARD CLASS","Test passed for addition",UVM_NONE);
+			if(trans.ALUResult == 1'b0) begin
+				`uvm_info("SCOREBOARD CLASS","Zero signal is high",UVM_NONE)
+			end
 	end
 end
 endfunction
@@ -276,6 +279,9 @@ function void check2(input sequence_item trans);
 if(trans.ALUControl == 3'b001) begin
 	if(trans.ALUResult == (trans.in1 - trans.in2)) begin
 		`uvm_info("SCOREBOARD CLASS","Test passed for subtraction",UVM_NONE);
+			if(trans.ALUResult == 1'b0) begin
+				`uvm_info("SCOREBOARD CLASS","Zero signal is high",UVM_NONE)
+			end
 	end
 end
 endfunction
@@ -285,6 +291,9 @@ function void check3(input sequence_item trans);
 if(trans.ALUControl == 3'b010) begin
 	if(trans.ALUResult == (trans.in1 & trans.in2)) begin
 		`uvm_info("SCOREBOARD CLASS","Test passed for & operation",UVM_NONE);
+			if(trans.ALUResult == 1'b0) begin
+				`uvm_info("SCOREBOARD CLASS","Zero signal is high",UVM_NONE)
+			end
 	end
 end
 endfunction
@@ -294,6 +303,9 @@ function void check4(input sequence_item trans);
 if(trans.ALUControl == 3'b011) begin
 	if(trans.ALUResult == (trans.in1 | trans.in2)) begin
 		`uvm_info("SCOREBOARD CLASS","Test passed for | operation",UVM_NONE);
+			if(trans.ALUResult == 1'b0) begin
+				`uvm_info("SCOREBOARD CLASS","Zero signal is high",UVM_NONE)
+			end
 	end
 end
 endfunction
@@ -303,7 +315,12 @@ function void check5(input sequence_item trans);
 if(trans.ALUControl == 3'b100) begin
 	if(trans.ALUResult == (trans.in1 ^ trans.in2)) begin
 		`uvm_info("SCOREBOARD CLASS","Test passed for ^ operation",UVM_NONE);
+		if(trans.ALUResult == 1'b0) begin
+				`uvm_info("SCOREBOARD CLASS","Zero signal is high",UVM_NONE)
+			end
 	end
+
+	
 end
 
 endfunction
@@ -313,6 +330,9 @@ function void check6(input sequence_item trans);
 if(trans.ALUControl == 3'b101) begin
 	if(trans.ALUResult == (trans.in1 * trans.in2)) begin
 		`uvm_info("SCOREBOARD CLASS","Test passed for multiplication operation",UVM_NONE);
+			if(trans.ALUResult == 1'b0) begin
+				`uvm_info("SCOREBOARD CLASS","Zero signal is high",UVM_NONE)
+			end
 	end
 end
 
@@ -323,6 +343,9 @@ function void check7(input sequence_item trans);
 if(trans.ALUControl == 3'b110) begin
 	if(trans.ALUResult == (trans.in1 / trans.in2)) begin
 		`uvm_info("SCOREBOARD CLASS","Test passed for division operation",UVM_NONE);
+			if(trans.ALUResult == 1'b0) begin
+				`uvm_info("SCOREBOARD CLASS","Zero signal is high",UVM_NONE)
+			end
 	end
 end
 endfunction
@@ -374,6 +397,7 @@ check6(trans);
 check7(trans);
 	
 endfunction
+
 
 endclass
 
