@@ -60,7 +60,7 @@ task body;
 
 req = sequence_item::type_id::create("req");
 
-repeat(10) begin
+repeat(100) begin
 
 start_item(req);
 req.randomize();
@@ -138,7 +138,7 @@ vif.zero <= req.zero;
 
 
 `uvm_info("DRIVER CLASS","Data has been recieved by driver",UVM_NONE)
-#10;
+#50;
 
 seq_item_port.item_done();
 
@@ -188,7 +188,7 @@ virtual task run_phase(uvm_phase phase);
 
 forever begin
 
-#10;
+#50;
 tx.in1 <= vif.in1;
 tx.in2 <= vif.in2;
 tx.ALUControl <= vif.ALUControl;
@@ -251,7 +251,6 @@ endfunction
 
 function void connect_phase(uvm_phase phase);
 super.connect_phase(phase);
-
 
 driver_h.seq_item_port.connect(sequencer_h.seq_item_export);
 
@@ -359,7 +358,7 @@ class scoreboard extends uvm_scoreboard;
 
 uvm_analysis_imp #(sequence_item , scoreboard) analysis_imp;
 
-sequence_item tx;
+sequence_item trans;
 
 function new(string name = "scoreboard" , uvm_component parent);
 super.new(name,parent);
@@ -372,7 +371,7 @@ function void build_phase(uvm_phase phase);
 super.build_phase(phase);
 
 
-tx = sequence_item::type_id::create("tx");
+trans = sequence_item::type_id::create("trans");
 
 
 endfunction
@@ -403,6 +402,65 @@ endclass
 
 
 
+//------------ Subscriber class -----------------
+
+class subscriber extends uvm_subscriber #(sequence_item);
+
+`uvm_component_utils(subscriber)
+
+sequence_item tx;
+
+
+covergroup cg;
+
+option.per_instance = 1;
+
+INPUT1 : coverpoint tx.in1{
+
+bins bin[] = {[31:0]};
+
+}
+
+INPUT2 : coverpoint tx.in2{
+
+bins bin[] = {[31:0]};
+
+}
+
+
+ALUCONTROL : coverpoint tx.ALUControl{
+
+bins bin[] = {[6:0]};
+
+}
+
+endgroup
+
+
+
+function new(string name = "subscriber" , uvm_component parent);
+super.new(name,parent);
+tx = sequence_item::type_id::create("tx");
+cg = new();
+endfunction
+
+
+//always define write function with this argument 
+function void write(sequence_item t);
+
+tx = t;
+
+`uvm_info("SUBSCRIBER CLASS","Data has been recieved by subscriber",UVM_NONE)
+
+cg.sample();
+
+endfunction
+
+endclass
+
+
+
+
 //------------ Environment class ----------------
 
 class environment extends uvm_env;
@@ -411,6 +469,7 @@ class environment extends uvm_env;
 
 agent agent_h;
 scoreboard scoreboard_h;
+subscriber subscriber_h;
 
 
 function new(string name = "environment" , uvm_component parent);
@@ -423,14 +482,16 @@ function void build_phase(uvm_phase phase);
 super.build_phase(phase);
 agent_h = agent::type_id::create("agent_h",this);
 scoreboard_h = scoreboard::type_id::create("scoreboard_h",this);
+subscriber_h = subscriber::type_id::create("subscriber_h",this);
 endfunction
 
 
-function void connect_phase(uvm_phase phase);
+virtual function void connect_phase(uvm_phase phase);
 super.connect_phase(phase);
 agent_h.monitor_h.analysis_port.connect(scoreboard_h.analysis_imp);
-endfunction
+agent_h.monitor_h.analysis_port.connect(subscriber_h.analysis_export);
 
+endfunction
 
 
 endclass
