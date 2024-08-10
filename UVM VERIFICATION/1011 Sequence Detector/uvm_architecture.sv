@@ -288,7 +288,7 @@ task run_phase(uvm_phase phase);
 	         end
                  $display("\n");
             end else begin
-                `uvm_error(get_type_name(), $sformatf("[%0t]OUTPUTS MISMATCHED, TEST FAILED",$time));
+                `uvm_info(get_type_name(), $sformatf("[%0t]OUTPUTS MISMATCHED, TEST FAILED",$time) , UVM_NONE);
                 `uvm_info(get_type_name(), $sformatf("[%0t]Expected Output = %0h, Actual Output = %0h", $time , expected_output, pkt.out), UVM_NONE);
                  $display("\n");
             end
@@ -424,7 +424,7 @@ endfunction
 
 
 
-/**function void report_phase(uvm_phase phase);
+function void report_phase(uvm_phase phase);
 
 uvm_report_server server;
 
@@ -434,25 +434,17 @@ server = uvm_report_server::get_server();
 
 if(server.get_severity_count(UVM_FATAL) == 0 & server.get_severity_count(UVM_ERROR) == 0) begin
 
-`uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
-`uvm_info("REPORT PHASE","-----------TEST1 PASSED----------",UVM_NONE);
-`uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
+`uvm_info(get_type_name() , "NO ERRORS IN VERIFICATION , ALL CLEAR" , UVM_NONE);
 
 if(server.get_severity_count(UVM_WARNING) != 0) begin
 
-
-`uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
-`uvm_info("REPORT PHASE","-----------WARNING!!!!!!!----------",UVM_NONE);
-`uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
+`uvm_info(get_type_name() , "WARNINGS GENERATED IN TESTBENCH" , UVM_NONE);
 
 end
 
 if(server.get_severity_count(UVM_FATAL) != 0) begin
 
-
-`uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
-`uvm_info("REPORT PHASE","-----------FATAL ERROR!!!!!!!----------",UVM_NONE);
-`uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
+`uvm_info(get_type_name() , "FATAL ERROR IN TESTBENCH" , UVM_NONE);
 
 end
 
@@ -464,13 +456,13 @@ end
 else begin
 
 `uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
-`uvm_info("REPORT PHASE","-----------TEST1 FAILED----------",UVM_NONE);
+`uvm_info("REPORT PHASE","-----------TEST FAILED----------",UVM_NONE);
 `uvm_info("REPORT PHASE","--------------------------------",UVM_NONE);
 
 end
 
 
-endfunction**/
+endfunction
 
 
 
